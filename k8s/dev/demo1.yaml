@@ -1,0 +1,43 @@
+# https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-apiversion-definition-guide.html
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: demo1-deployment
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: demo1
+        env: dev
+    spec:
+      containers:
+        - name: demo1
+          image: storehub/demo1
+          ports:
+            - name: http-port
+              containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: dev-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo1
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v1
+      kind: Mapping
+      name: demo1_mapping
+      prefix: /demo1/
+      service: demo1
+spec:
+  selector:
+    app: demo1
+    env: dev
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
